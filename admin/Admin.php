@@ -30,14 +30,26 @@ class Ajax_Form_Submission_Admin
 			30
 		);
 	}
+    public function collect_ajax_value() {
+        // Check if the request is coming via AJAX
+        if ( ! isset( $_POST['ajax_data'] ) || ! wp_verify_nonce( $_POST['afs_nonce'], 'afs-nonce' ) ) {
+            wp_send_json_error( 'Invalid request' );
+            wp_die();
+        }
 
-	public function collect_ajax_value(){
+        // Sanitize and validate the data before saving
+        $ajax_data = $_POST['ajax_data'];
 
+        // Update the option value after serializing it
+        update_option( 'afs_form_data', $ajax_data );
 
-		update_option('my_test_option_key1', "my_test_value2");
-
-		wp_send_json_success([]);
-	}
+        // Send success response
+        wp_send_json_success( [
+            'message' => 'Data sent successfully',
+            'data' => $ajax_data,
+        ]);
+        wp_die();
+    }
 
 	public function afs_admin_page()
 	{
@@ -48,7 +60,7 @@ class Ajax_Form_Submission_Admin
 		wp_enqueue_style('admin_style', (WPAFS_ASSETS . '/css/style.css'), null, WPAFS_VERSION, 'all' );
 		wp_enqueue_script('afs-script',WPAFS_ASSETS.'/js/afs-script.js',array('jquery'),time(),true);
 		wp_localize_script('afs-script','afs_ajax',array(
-			'ajaxurl' => admin_url('admin-ajax.php'),
+			'ajax_url' => admin_url('admin-ajax.php'),
 			'afs_nonce' => wp_create_nonce('afs-nonce')
 		));
 	}
